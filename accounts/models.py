@@ -5,7 +5,7 @@ from django.utils import timezone
 class UtilisateurManager(BaseUserManager):
     def create_user(self, email, nom, prenom, role, password=None):
         if not email:
-            raise ValueError('L\'email est obligatoire')
+            raise ValueError('Email obligatoire')
         
         email = self.normalize_email(email)
         user = self.model(
@@ -31,7 +31,6 @@ class UtilisateurManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-
 class Utilisateur(AbstractBaseUser, PermissionsMixin):
     ROLE_CHOICES = [
         ('CANDIDAT', 'Candidat'),
@@ -44,11 +43,16 @@ class Utilisateur(AbstractBaseUser, PermissionsMixin):
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='CANDIDAT')
     telephone = models.CharField(max_length=20, blank=True, null=True)
     entreprise = models.CharField(max_length=200, blank=True, null=True)
+        # حقول التحقق من البريد وإعادة تعيين كلمة المرور
+    email_verified = models.BooleanField(default=False)
+    verification_code = models.CharField(max_length=6, blank=True, null=True)
+    verification_code_created_at = models.DateTimeField(blank=True, null=True)
     
+    reset_password_code = models.CharField(max_length=6, blank=True, null=True)
+    reset_password_code_created_at = models.DateTimeField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=timezone.now)
-    last_login = models.DateTimeField(blank=True, null=True)
     
     objects = UtilisateurManager()
     
@@ -57,11 +61,3 @@ class Utilisateur(AbstractBaseUser, PermissionsMixin):
     
     def __str__(self):
         return f"{self.prenom} {self.nom}"
-    
-    @property
-    def est_candidat(self):
-        return self.role == 'CANDIDAT'
-    
-    @property
-    def est_recruteur(self):
-        return self.role == 'RECRUTEUR'

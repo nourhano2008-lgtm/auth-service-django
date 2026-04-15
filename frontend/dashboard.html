@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard - Smart CV Matcher</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+        .card { background: white; border-radius: 10px; padding: 25px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h2 { margin-bottom: 20px; color: #333; }
+        .info { background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        button { padding: 10px 20px; background: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #c82333; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏠 Smart CV Matcher</h1>
+        <button onclick="deconnexion()">Déconnexion</button>
+    </div>
+    <div class="container">
+        <div class="card">
+            <h2>👤 Mon profil</h2>
+            <div id="userInfo" class="info"></div>
+        </div>
+        <div class="card">
+            <h2>📊 Statistiques</h2>
+            <p>Bienvenue dans votre espace personnel !</p>
+            <p>Cette plateforme vous permet de :</p>
+            <ul style="margin-left: 20px; margin-top: 10px;">
+                <li>📄 Déposer vos CV (pour les candidats)</li>
+                <li>🔍 Publier des offres d'emploi (pour les recruteurs)</li>
+                <li>🤖 Obtenir un score de correspondance IA</li>
+                <li>📧 Recevoir des notifications</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('access_token');
+        
+        if (!token) {
+            window.location.href = 'login.html';
+        }
+        
+        async function getUserProfile() {
+            try {
+                const response = await fetch('http://localhost:3001/api/auth/profil/', {
+                    method: 'GET',
+                    headers: {'Authorization': 'Bearer ' + token}
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const user = data.user;
+                    document.getElementById('userInfo').innerHTML = `
+                        <p><strong>Email:</strong> ${user.email}</p>
+                        <p><strong>Nom:</strong> ${user.nom}</p>
+                        <p><strong>Prénom:</strong> ${user.prenom}</p>
+                        <p><strong>Rôle:</strong> ${user.role === 'CANDIDAT' ? '👨‍🎓 Candidat' : '🏢 Recruteur'}</p>
+                        <p><strong>Email vérifié:</strong> ${user.email_verified ? '✅ Oui' : '❌ Non'}</p>
+                    `;
+                } else {
+                    window.location.href = 'login.html';
+                }
+            } catch (error) {
+                window.location.href = 'login.html';
+            }
+        }
+        
+        function deconnexion() {
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+        
+        getUserProfile();
+    </script>
+</body>
+</html>

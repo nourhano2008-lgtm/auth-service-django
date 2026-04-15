@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Vérification email</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; justify-content: center; align-items: center; }
+        .container { background: white; border-radius: 10px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); width: 400px; padding: 40px; text-align: center; }
+        h2 { margin-bottom: 20px; color: #333; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; font-size: 16px; text-align: center; }
+        button { width: 100%; padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; margin-top: 10px; }
+        .message { margin: 15px 0; padding: 10px; border-radius: 5px; display: none; }
+        .error { background: #fee; color: #c00; display: block; }
+        .success { background: #efe; color: #0a0; display: block; }
+        .info { color: #666; font-size: 14px; margin: 15px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>📧 Vérification email</h2>
+        <div id="message" class="message"></div>
+        <div class="info">Un code de vérification a été envoyé à votre adresse email.</div>
+        <input type="text" id="code" placeholder="Code de vérification" maxlength="6">
+        <button onclick="verifyEmail()">Vérifier</button>
+        <button onclick="resendCode()" style="background: #666;">Renvoyer le code</button>
+        <div class="links" style="margin-top: 20px;"><a href="login.html">Aller à la connexion</a></div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const email = urlParams.get('email');
+
+        async function verifyEmail() {
+            const code = document.getElementById('code').value;
+            const msgDiv = document.getElementById('message');
+            
+            if (!code || code.length !== 6) {
+                msgDiv.innerHTML = 'Veuillez entrer un code valide (6 chiffres)';
+                msgDiv.className = 'message error';
+                return;
+            }
+            
+            try {
+                const response = await fetch('http://localhost:3001/api/auth/verify-email/', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({email, code})
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    msgDiv.innerHTML = data.message;
+                    msgDiv.className = 'message success';
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 2000);
+                } else {
+                    msgDiv.innerHTML = data.message;
+                    msgDiv.className = 'message error';
+                }
+            } catch (error) {
+                msgDiv.innerHTML = 'Erreur de connexion au serveur';
+                msgDiv.className = 'message error';
+            }
+        }
+
+        async function resendCode() {
+            const msgDiv = document.getElementById('message');
+            
+            try {
+                const response = await fetch('http://localhost:3001/api/auth/send-verification-code/', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({email})
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    msgDiv.innerHTML = data.message;
+                    msgDiv.className = 'message success';
+                } else {
+                    msgDiv.innerHTML = data.message;
+                    msgDiv.className = 'message error';
+                }
+            } catch (error) {
+                msgDiv.innerHTML = 'Erreur de connexion au serveur';
+                msgDiv.className = 'message error';
+            }
+        }
+    </script>
+</body>
+</html>

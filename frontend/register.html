@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Inscription - Smart CV Matcher</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; justify-content: center; align-items: center; }
+        .container { background: white; border-radius: 10px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); width: 450px; padding: 40px; }
+        h2 { text-align: center; margin-bottom: 30px; color: #333; }
+        input, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; font-size: 16px; }
+        button { width: 100%; padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; transition: 0.3s; }
+        button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .message { margin: 15px 0; padding: 10px; border-radius: 5px; display: none; }
+        .error { background: #fee; color: #c00; border: 1px solid #fcc; display: block; }
+        .success { background: #efe; color: #0a0; border: 1px solid #cfc; display: block; }
+        .links { text-align: center; margin-top: 20px; }
+        .links a { color: #667eea; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>📝 Inscription</h2>
+        <div id="message" class="message"></div>
+        <input type="text" id="nom" placeholder="Nom">
+        <input type="text" id="prenom" placeholder="Prénom">
+        <input type="email" id="email" placeholder="Email">
+        <select id="role">
+            <option value="CANDIDAT">Candidat</option>
+            <option value="RECRUTEUR">Recruteur</option>
+        </select>
+        <input type="text" id="entreprise" placeholder="Entreprise (optionnel)">
+        <input type="password" id="password" placeholder="Mot de passe">
+        <input type="password" id="password_confirm" placeholder="Confirmer">
+        <button onclick="inscription()">S'inscrire</button>
+        <div class="links">
+            <a href="login.html">Déjà un compte ? Se connecter</a>
+        </div>
+    </div>
+
+    <script>
+        async function inscription() {
+            const data = {
+                nom: document.getElementById('nom').value,
+                prenom: document.getElementById('prenom').value,
+                email: document.getElementById('email').value,
+                role: document.getElementById('role').value,
+                entreprise: document.getElementById('entreprise').value,
+                password: document.getElementById('password').value,
+                password_confirm: document.getElementById('password_confirm').value
+            };
+            
+            const msgDiv = document.getElementById('message');
+            
+            if (!data.nom || !data.prenom || !data.email || !data.password) {
+                msgDiv.innerHTML = 'Veuillez remplir tous les champs obligatoires';
+                msgDiv.className = 'message error';
+                return;
+            }
+            
+            if (data.password !== data.password_confirm) {
+                msgDiv.innerHTML = 'Les mots de passe ne correspondent pas';
+                msgDiv.className = 'message error';
+                return;
+            }
+            
+            try {
+                const response = await fetch('http://localhost:3001/api/auth/inscription/', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    msgDiv.innerHTML = 'Inscription réussie ! Un code de vérification a été envoyé à votre email.';
+                    msgDiv.className = 'message success';
+                    setTimeout(() => {
+                        window.location.href = 'verify-email.html?email=' + encodeURIComponent(data.email);
+                    }, 2000);
+                } else {
+                    const errors = result.errors ? Object.values(result.errors).flat().join(', ') : result.message;
+                    msgDiv.innerHTML = errors;
+                    msgDiv.className = 'message error';
+                }
+            } catch (error) {
+                msgDiv.innerHTML = 'Erreur de connexion au serveur';
+                msgDiv.className = 'message error';
+            }
+        }
+    </script>
+</body>
+</html>
